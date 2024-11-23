@@ -148,23 +148,28 @@ async def process_listener_task(listener_id, event, url):
         # Call the sampling loop and capture the final response
         final_result = await sampling_loop(prompt)
 
+        # Check if the output indicates a positive response
+        if "Answer Type: positive" in final_result:
+            # Send email notification to a hardcoded email address for now
+            to_email = "karandikarshreyash@gmail.com"
+            subject = "Your Website Monitor Alert - Positive Result"
+            html_content = f"""
+            <p>Hello,</p>
+            <p>The event you are monitoring has occurred:</p>
+            <p><strong>Event:</strong> {event}</p>
+            <p><strong>Result:</strong> {final_result}</p>
+            <p>Visit the website for more details: <a href="{url}">{url}</a></p>
+            <p>Best regards,<br>Your App Team</p>
+            """
+
+            # Send the email
+            send_email_notification(to_email, subject, html_content)
+            print("Email sent for positive result.")
+        else:
+            print("No email sent as the result is not positive.")
+
         # Update the listener status to "completed" with the final result
         update_listener_status(listener_id, "completed", final_result)
-
-        # Send email notification to the user only after task completion
-        to_email = "karandikarshreyash@gmail.com"  # Replace with dynamic user email if needed
-        subject = "Your Website Monitor Alert"
-        html_content = f"""
-        <p>Hello,</p>
-        <p>The event you are monitoring has been processed:</p>
-        <p><strong>Event:</strong> {event}</p>
-        <p><strong>Result:</strong> {final_result}</p>
-        <p>Visit the website for more details: <a href="{url}">{url}</a></p>
-        <p>Best regards,<br>Your App Team</p>
-        """
-
-        # Send the email
-        send_email_notification(to_email, subject, html_content)
 
     except Exception as e:
         print(f"Error processing listener {listener_id}: {e}")

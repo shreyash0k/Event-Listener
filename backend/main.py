@@ -203,8 +203,6 @@ async def sampling_loop(command: str) -> str:
                 final_response = content_block["text"]  # Save the assistant's response
 
             elif content_block["type"] == "tool_use":
-                print(f"\nTool Use: {content_block['name']}")
-                print(f"Input: {content_block['input']}")
 
                 # Execute the tool
                 result = await tool_collection.run(
