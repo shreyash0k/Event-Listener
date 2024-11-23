@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const urlPreview = document.getElementById("url-preview");
     const actionInput = document.getElementById("action-input");
     const frequencyDropdown = document.getElementById("check-frequency-dropdown");
     const notificationTypeDropdown = document.getElementById("notification-type-dropdown");
@@ -19,8 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const currentUrl = tabs[0]?.url || "Unable to retrieve URL";
-        urlPreview.value = currentUrl; // Set the value in the non-editable input field
+        const currentUrl = tabs[0]?.url || null;
 
         saveFlowBtn.addEventListener("click", () => {
             const action = actionInput.value.trim();

@@ -223,7 +223,6 @@ async def sampling_loop(command: str) -> str:
                 if result:
                     print("Converting tool result: ", result)
                     tool_result = _make_api_tool_result(result, content_block["id"])
-                    print(f"Tool Result: {tool_result}")
 
                     if result.output:
                         print(f"\nTool Output: {result.output}")
