@@ -61,6 +61,22 @@ def send_email_notification(to_email, subject, html_content):
         print(f"Error sending email: {e}")
         return None
 
+@app.route('/manage-listeners', methods=['GET'])
+def manage_listeners():
+    """
+    Fetch all listeners from the event_listeners table and return as JSON.
+    """
+    try:
+        response = supabase.table("event_listeners").select("*").execute()
+        if response.data:
+            return jsonify({"listeners": response.data}), 200
+        else:
+            return jsonify({"message": "No listeners found."}), 200
+    except Exception as e:
+        print(f"Error fetching listeners: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/trigger', methods=['POST'])
 def trigger():
     data = request.json
