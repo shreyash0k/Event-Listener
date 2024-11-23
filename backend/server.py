@@ -6,6 +6,7 @@ import threading
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from apscheduler.schedulers.background import BackgroundScheduler  # Added for scheduling
 from main import sampling_loop  # Your sampling loop
 
 # Load environment variables
@@ -19,12 +20,21 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for requests from the Chrome extension
 
+# Initialize the scheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
+
 def calculate_next_trigger_time(interval):
-    """
-    Calculate the next trigger time based on the interval provided.
-    """
     now = datetime.now(timezone.utc)
-    if interval == "30-minutes":
+    if interval == "3-minutes":
+        return now + timedelta(minutes=3)
+    elif interval == "5-minutes":
+        return now + timedelta(minutes=5)
+    elif interval == "10-minutes":
+        return now + timedelta(minutes=10)
+    elif interval == "20-minutes":
+        return now + timedelta(minutes=20)
+    elif interval == "30-minutes":
         return now + timedelta(minutes=30)
     elif interval == "1-hour":
         return now + timedelta(hours=1)
@@ -37,12 +47,15 @@ def calculate_next_trigger_time(interval):
     else:
         raise ValueError(f"Unknown interval: {interval}")
 
+
 @app.route('/trigger', methods=['POST'])
 def trigger():
+    """
+    Endpoint for adding new listeners.
+    """
     data = request.json
     print("Received payload:", data)
 
-    # Extract data from the payload
     event = data.get("event")
     url = data.get("url")
     interval = data.get("interval")
@@ -72,109 +85,117 @@ def trigger():
         if insert_response.data:
             listener_id = insert_response.data[0]["id"]
             print(f"Inserted Listener ID: {listener_id}")
-
-            # Respond to the frontend immediately
-            response = {"message": "Listener added successfully", "listener_id": listener_id}
-
-            # Start a new thread to handle the async task
-            threading.Thread(target=run_async_task, args=(listener_id, event, url)).start()
-
-            return jsonify(response), 200
+            return jsonify({"message": "Listener added successfully", "listener_id": listener_id}), 200
         else:
             return jsonify({"error": "Failed to insert data into Supabase"}), 500
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
-def run_async_task(listener_id, event, url):
+def fetch_ready_events():
     """
-    Run the async task in a new event loop inside a thread.
+    Fetch events that are ready for processing based on `next_trigger_at`.
     """
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(process_listener_task(listener_id, event, url))
-    finally:
-        loop.close()
+    now = datetime.now(timezone.utc).isoformat()  # Ensure this is in ISO 8601 format
+    response = supabase.table("event_listeners") \
+        .select("*") \
+        .filter("next_trigger_at", "lte", now) \
+        .filter("status", "eq", "pending") \
+        .execute()
+    return response.data if response.data else []
 
-async def process_listener_task(listener_id, event, url):
-    """
-    Process the task asynchronously after inserting into the database.
-    """
-    try:
-        now = datetime.now(timezone.utc)
 
-        # Update trigger status to "in_progress" and set last_triggered_at
+async def process_listener_task(listener):
+    """
+    Process the task asynchronously, evaluate the agent response, and update the table accordingly.
+    """
+    listener_id = listener["id"]
+    event = listener["event"]
+    url = listener["url"]
+
+    try:
+        print(f"Processing listener {listener_id}...")
+
+        # Update trigger status to "in_progress"
         supabase.table("event_listeners").update({
             "trigger_status": "in_progress",
-            "last_triggered_at": now.isoformat()
+            "last_triggered_at": datetime.now(timezone.utc).isoformat()
         }).eq("id", listener_id).execute()
 
-        # Improved prompt with required response format
+        # Build the prompt
         prompt = (
             f"Visit this website {url} and your task is to {event}. "
             "Carefully explore all visible sections, links, banners, and interactive elements on the page. "
-            "Ensure you gather as much relevant information as possible related to the task. "
-            "Do not navigate to external websites or perform searches outside this page. "
-            "Once you have completed your task, provide your response in this format: "
-            "answer type: positive/negative/neutral; "
-            "answer: <your concise answer here>; "
-            "details: <any additional observations or findings that may support the answer>."
+            "Provide your response in a clear paragraph with either the word 'positive' or 'negative'."
         )
 
-        # Call the sampling loop and capture the final response
+        # Call the sampling loop and capture the response
         final_result = await sampling_loop(prompt)
 
-        # Update the listener status to "completed" with the final result
-        update_listener_status(listener_id, "completed", final_result)
+        # Normalize the AI response
+        response_text = final_result.strip().lower()
 
-        # Calculate the next trigger time
-        listener_data = supabase.table("event_listeners").select("interval").eq("id", listener_id).execute()
-        interval = listener_data.data[0]["interval"]
-        next_trigger_at = calculate_next_trigger_time(interval).isoformat()
-
-        # Update next_trigger_at
-        supabase.table("event_listeners").update({
-            "next_trigger_at": next_trigger_at
-        }).eq("id", listener_id).execute()
+        # Check for "positive" or "negative" in the response
+        if "positive" in response_text:
+            # Task achieved, mark as completed
+            print(f"Listener {listener_id} achieved: {response_text}")
+            supabase.table("event_listeners").update({
+                "status": "completed",
+                "result": {"response": response_text},
+                "next_trigger_at": None  # No further triggers for completed tasks
+            }).eq("id", listener_id).execute()
+        elif "negative" in response_text:
+            # Task not achieved, reset to pending with updated next_trigger_at
+            print(f"Listener {listener_id} not achieved: {response_text}")
+            next_trigger_at = calculate_next_trigger_time(listener["interval"]).isoformat()
+            supabase.table("event_listeners").update({
+                "status": "pending",
+                "result": {"response": response_text},
+                "next_trigger_at": next_trigger_at
+            }).eq("id", listener_id).execute()
+        else:
+            # Unexpected response format
+            raise ValueError(f"Unexpected response format: {response_text}")
 
     except Exception as e:
         print(f"Error processing listener {listener_id}: {e}")
-        # Update status to "failed" in case of an error and increment retry_count
-        listener_data = supabase.table("event_listeners").select("retry_count", "max_retries").eq("id", listener_id).execute()
-        retry_count = listener_data.data[0]["retry_count"]
-        max_retries = listener_data.data[0]["max_retries"]
+        retry_count = listener["retry_count"] + 1
 
-        if retry_count < max_retries:
-            next_retry_time = calculate_next_trigger_time("30-minutes").isoformat()
+        if retry_count >= listener["max_retries"]:
             supabase.table("event_listeners").update({
-                "retry_count": retry_count + 1,
-                "trigger_status": "retrying",
-                "next_trigger_at": next_retry_time
+                "status": "failed",
+                "error_log": str(e)
             }).eq("id", listener_id).execute()
         else:
-            update_listener_status(listener_id, "failed", str(e))
+            supabase.table("event_listeners").update({
+                "retry_count": retry_count,
+                "trigger_status": "retrying",
+                "next_trigger_at": calculate_next_trigger_time("30-minutes").isoformat()
+            }).eq("id", listener_id).execute()
 
-def update_listener_status(listener_id, status, result=None):
+def scheduled_task():
     """
-    Update the status and result of a listener in the Supabase table.
+    Periodically check the database for ready listeners and process them.
     """
-    try:
-        update_data = {
-            "status": status,
-        }
-        if result:
-            update_data["result"] = result
+    events = fetch_ready_events()
+    if not events:
+        print("No ready events to process.")
+        return
 
-        # Execute the update query
-        update_response = supabase.table("event_listeners").update(update_data).eq("id", listener_id).execute()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-        if update_response.data:
-            print(f"Successfully updated listener {listener_id} with status '{status}' and result:\n{result}")
-    except Exception as e:
-        print(f"Error updating listener {listener_id}: {e}")
+    tasks = [process_listener_task(event) for event in events]
+    loop.run_until_complete(asyncio.gather(*tasks))
+    loop.close()
+
+# Schedule the task to run every minute
+scheduler.add_job(scheduled_task, 'interval', minutes=1)
 
 if __name__ == '__main__':
     port = 5001
-    print(f"Server is running on http://127.0.0.1:{port}")
-    app.run(host='0.0.0.0', port=port)
+    try:
+        print(f"Server is running on http://127.0.0.1:{port}")
+        app.run(host='0.0.0.0', port=port)
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
