@@ -52,7 +52,7 @@ def trigger():
             response = {"message": "Listener added successfully", "listener_id": listener_id}
 
             # Start a new thread to handle the async task
-            threading.Thread(target=run_async_task, args=(listener_id, event)).start()
+            threading.Thread(target=run_async_task, args=(listener_id, event, url)).start()
 
             return jsonify(response), 200
         else:
@@ -62,23 +62,35 @@ def trigger():
         return jsonify({"error": str(e)}), 500
 
 
-def run_async_task(listener_id, prompt):
+def run_async_task(listener_id, event, url):
     """
     Run the async task in a new event loop inside a thread.
     """
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        loop.run_until_complete(process_listener_task(listener_id, prompt))
+        loop.run_until_complete(process_listener_task(listener_id, event, url))
     finally:
         loop.close()
 
 
-async def process_listener_task(listener_id, prompt):
+async def process_listener_task(listener_id, event, url):
     """
     Process the task asynchronously after inserting into the database.
     """
     try:
+        # Improved prompt with required response format
+        prompt = (
+            f"Visit this website {url} and your task is to {event}. "
+            "Carefully explore all visible sections, links, banners, and interactive elements on the page. "
+            "Ensure you gather as much relevant information as possible related to the task. "
+            "Do not navigate to external websites or perform searches outside this page. "
+            "Once you have completed your task, provide your response in this format: "
+            "answer type: positive/negative/neutral; "
+            "answer: <your concise answer here>; "
+            "details: <any additional observations or findings that may support the answer>."
+        )
+
         # Call the sampling loop and capture the final response
         final_result = await sampling_loop(prompt)
 
@@ -113,7 +125,6 @@ def update_listener_status(listener_id, status, result=None):
             print(f"Unknown issue updating listener {listener_id}")
     except Exception as e:
         print(f"Error updating listener {listener_id}: {e}")
-
 
 
 if __name__ == '__main__':
