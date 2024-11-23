@@ -1,8 +1,10 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
-    margin: 10px;
-    padding: 0;
-    width: 300px; /* Adjust the width of the popup */
+    margin: 0;
+    padding: 10px;
+    width: 400px; /* Adjust to your preferred width */
+    max-width: 600px; /* To ensure it doesn't go over Chrome's limits */
 }
 
 h1 {
@@ -11,17 +13,34 @@ h1 {
     margin-bottom: 20px;
 }
 
+
 textarea {
-    width: 100%;
+    width: 100%; /* Ensure it occupies full width of its container */
+    box-sizing: border-box; /* Includes padding and border in width */
     height: 60px;
     margin-bottom: 15px;
     font-size: 14px;
-    padding: 5px;
+    padding: 10px; /* Add some inner space for text */
     border: 1px solid #ccc;
     border-radius: 4px;
+    resize: none; /* Prevent resizing */
+}
+#url-preview {
+    width: 100%; /* Full width within its container */
+    box-sizing: border-box; /* Include padding and borders in the total width */
+    padding: 10px; /* Inner space for text */
+    font-size: 16px; /* Increase font size for better readability */
+    background-color: #f5f5f5; /* Distinctive background for read-only */
+    border: 1px solid #ccc; /* Visible border */
+    border-radius: 4px; /* Rounded corners */
+    margin-bottom: 15px; /* Spacing between elements */
+    height: 40px; /* Increase height to make it more noticeable */
+    color: #333; /* Text color for good contrast */
+    overflow: hidden; /* Ensure no extra scrolling for the text */
 }
 
-select, button {
+select,
+button {
     width: 100%;
     margin-bottom: 15px;
     padding: 10px;

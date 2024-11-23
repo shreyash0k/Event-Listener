@@ -4,92 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Listener Setup</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        h1 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        textarea, select, button {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 14px;
-        }
-
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        #feedback {
-            display: none;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        #feedback.success {
-            color: green;
-        }
-
-        #feedback.error {
-            color: red;
-        }
-
-        #spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            margin: 0 auto;
-            border: 3px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 3px solid #007BFF;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css"> <!-- External stylesheet -->
 </head>
 <body>
     <h1>Event Listener Setup</h1>
 
     <div>
+        <label for="url-preview">Page URL</label>
+        <input 
+            type="text" 
+            id="url-preview" 
+            readonly 
+            placeholder="Loading URL..." 
+        />
+    </div>
+    
+    <div>
         <label for="action-input">Event to Listen For</label>
-        <textarea 
-            id="action-input" 
-            placeholder="E.g., Notify me when price drops below $100"></textarea>
+        <textarea id="action-input" placeholder="E.g., Notify me when price drops below $100"></textarea>
     </div>
 
     <div>
         <label for="check-frequency-dropdown">Listening Interval</label>
-        <select id="check-frequency-dropdown">
-            <option value="30-minutes">Every 30 minutes</option>
-            <option value="1-hour">Every 1 hour</option>
-            <option value="12-hours">Every 12 hours</option>
-            <option value="1-day">Every day</option>
-            <option value="1-week">Every week</option>
-        </select>
+       <select id="check-frequency-dropdown">
+    <option value="3-minutes">Every 3 minutes</option>
+    <option value="5-minutes">Every 5 minutes</option>
+    <option value="10-minutes">Every 10 minutes</option>
+    <option value="20-minutes">Every 20 minutes</option>
+    <option value="30-minutes">Every 30 minutes</option>
+    <option value="1-hour">Every 1 hour</option>
+    <option value="12-hours">Every 12 hours</option>
+    <option value="1-day">Every day</option>
+    <option value="1-week">Every week</option>
+</select>
+
     </div>
 
     <div>
