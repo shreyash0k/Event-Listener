@@ -3,6 +3,7 @@ from flask_cors import CORS
 import asyncio
 import os
 import threading
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from main import sampling_loop  # Your sampling loop
@@ -15,10 +16,26 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
 app = Flask(__name__)
 CORS(app)  # Enable CORS for requests from the Chrome extension
 
+def calculate_next_trigger_time(interval):
+    """
+    Calculate the next trigger time based on the interval provided.
+    """
+    now = datetime.now(timezone.utc)
+    if interval == "30-minutes":
+        return now + timedelta(minutes=30)
+    elif interval == "1-hour":
+        return now + timedelta(hours=1)
+    elif interval == "12-hours":
+        return now + timedelta(hours=12)
+    elif interval == "1-day":
+        return now + timedelta(days=1)
+    elif interval == "1-week":
+        return now + timedelta(weeks=1)
+    else:
+        raise ValueError(f"Unknown interval: {interval}")
 
 @app.route('/trigger', methods=['POST'])
 def trigger():
@@ -35,6 +52,9 @@ def trigger():
         return jsonify({"error": "Event description and URL are required"}), 400
 
     try:
+        now = datetime.now(timezone.utc)
+        next_trigger_time = calculate_next_trigger_time(interval)
+
         # Insert the data into Supabase
         insert_response = supabase.table("event_listeners").insert({
             "event": event,
@@ -42,6 +62,11 @@ def trigger():
             "interval": interval,
             "notification_type": notification_type,
             "status": "pending",
+            "last_triggered_at": now.isoformat(),
+            "next_trigger_at": next_trigger_time.isoformat(),
+            "retry_count": 0,
+            "max_retries": 3,
+            "trigger_status": "pending",
         }).execute()
 
         if insert_response.data:
@@ -61,7 +86,6 @@ def trigger():
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
-
 def run_async_task(listener_id, event, url):
     """
     Run the async task in a new event loop inside a thread.
@@ -73,12 +97,19 @@ def run_async_task(listener_id, event, url):
     finally:
         loop.close()
 
-
 async def process_listener_task(listener_id, event, url):
     """
     Process the task asynchronously after inserting into the database.
     """
     try:
+        now = datetime.now(timezone.utc)
+
+        # Update trigger status to "in_progress" and set last_triggered_at
+        supabase.table("event_listeners").update({
+            "trigger_status": "in_progress",
+            "last_triggered_at": now.isoformat()
+        }).eq("id", listener_id).execute()
+
         # Improved prompt with required response format
         prompt = (
             f"Visit this website {url} and your task is to {event}. "
@@ -96,11 +127,33 @@ async def process_listener_task(listener_id, event, url):
 
         # Update the listener status to "completed" with the final result
         update_listener_status(listener_id, "completed", final_result)
+
+        # Calculate the next trigger time
+        listener_data = supabase.table("event_listeners").select("interval").eq("id", listener_id).execute()
+        interval = listener_data.data[0]["interval"]
+        next_trigger_at = calculate_next_trigger_time(interval).isoformat()
+
+        # Update next_trigger_at
+        supabase.table("event_listeners").update({
+            "next_trigger_at": next_trigger_at
+        }).eq("id", listener_id).execute()
+
     except Exception as e:
         print(f"Error processing listener {listener_id}: {e}")
-        # Update status to failed in case of an error
-        update_listener_status(listener_id, "failed", str(e))
+        # Update status to "failed" in case of an error and increment retry_count
+        listener_data = supabase.table("event_listeners").select("retry_count", "max_retries").eq("id", listener_id).execute()
+        retry_count = listener_data.data[0]["retry_count"]
+        max_retries = listener_data.data[0]["max_retries"]
 
+        if retry_count < max_retries:
+            next_retry_time = calculate_next_trigger_time("30-minutes").isoformat()
+            supabase.table("event_listeners").update({
+                "retry_count": retry_count + 1,
+                "trigger_status": "retrying",
+                "next_trigger_at": next_retry_time
+            }).eq("id", listener_id).execute()
+        else:
+            update_listener_status(listener_id, "failed", str(e))
 
 def update_listener_status(listener_id, status, result=None):
     """
@@ -116,16 +169,10 @@ def update_listener_status(listener_id, status, result=None):
         # Execute the update query
         update_response = supabase.table("event_listeners").update(update_data).eq("id", listener_id).execute()
 
-        # Check if the update was successful
         if update_response.data:
             print(f"Successfully updated listener {listener_id} with status '{status}' and result:\n{result}")
-        elif update_response.error:
-            print(f"Failed to update listener {listener_id}: {update_response.error}")
-        else:
-            print(f"Unknown issue updating listener {listener_id}")
     except Exception as e:
         print(f"Error updating listener {listener_id}: {e}")
-
 
 if __name__ == '__main__':
     port = 5001

@@ -253,6 +253,10 @@ async def sampling_loop(command: str) -> str:
             # No tools used, task is complete
             break
 
+    # Stop the instance after completing the loop
+    instance.stop()
+    print("Scrapybara instance stopped.")
+    
     # Return the final response from the assistant
     return final_response
 
