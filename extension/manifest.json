@@ -1,26 +1,26 @@
 {
-    "manifest_version": 3,
-    "name": "URL Notes",
-    "short_name": "Notes",
-    "version": "1.0.0",
-    "description": "Save URLs with custom notes.",
-    "permissions": ["storage", "tabs"],
-    "host_permissions": ["<all_urls>"],
-    "icons": {
-      "16": "icon.png",
-      "32": "icon.png",
-      "48": "icon.png",
-      "128": "icon.png"
-    },
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icon.png",
-        "32": "icon.png",
-        "48": "icon.png"
-      }
-    },
-    "background": {
-      "service_worker": "background.js"
+  "manifest_version": 3,
+  "name": "Web Event Listener",
+  "short_name": "EventListener",
+  "version": "1.0.1",
+  "description": "Set up listeners for web page events and receive notifications.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "icons/icon.png",
+    "32": "icons/icon.png",
+    "48": "icons/icon.png",
+    "128": "icons/icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon.png",
+      "32": "icons/icon.png",
+      "48": "icons/icon.png"
     }
-  }  
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

@@ -1,110 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta Information -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Listener Setup</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        h1 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        textarea, select, button {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 14px;
-        }
-
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        #feedback {
-            display: none;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        #feedback.success {
-            color: green;
-        }
-
-        #feedback.error {
-            color: red;
-        }
-
-        #spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            margin: 0 auto;
-            border: 3px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 3px solid #007BFF;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
 </head>
 <body>
-    <h1>Event Listener Setup</h1>
+    <!-- Main Setup Container -->
+    <div id="setup-container">
+        <h1>Event Listener Setup</h1>
 
-    <div>
-        <label for="action-input">Event to Listen For</label>
-        <textarea 
-            id="action-input" 
-            placeholder="Check if size L is available to buy in these shoes"></textarea>
+        <!-- Event Description Input -->
+        <div>
+            <label for="action-input">Event to Listen For</label>
+            <textarea 
+                id="action-input" 
+                placeholder="Check if size L is available to buy in these shoes"></textarea>
+        </div>
+
+        <!-- Listening Interval Dropdown -->
+        <div>
+            <label for="check-frequency-dropdown">Listening Interval</label>
+            <select id="check-frequency-dropdown">
+                <option value="30-minutes">Every 30 minutes</option>
+                <option value="1-hour">Every 1 hour</option>
+                <option value="12-hours">Every 12 hours</option>
+                <option value="1-day">Every day</option>
+                <option value="1-week">Every week</option>
+            </select>
+        </div>
+
+        <!-- Notification Method Dropdown -->
+        <div>
+            <label for="notification-type-dropdown">Notification Method</label>
+            <select id="notification-type-dropdown">
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+            </select>
+        </div>
+
+        <!-- Save Listener Button -->
+        <button id="save-flow-btn">Save Listener</button>
+
+        <!-- Loading Spinner -->
+        <div id="spinner"></div>
+        <!-- Feedback Message -->
+        <div id="feedback"></div>
     </div>
-
-    <div>
-        <label for="check-frequency-dropdown">Listening Interval</label>
-        <select id="check-frequency-dropdown">
-            <option value="30-minutes">Every 30 minutes</option>
-            <option value="1-hour">Every 1 hour</option>
-            <option value="12-hours">Every 12 hours</option>
-            <option value="1-day">Every day</option>
-            <option value="1-week">Every week</option>
-        </select>
-    </div>
-
-    <div>
-        <label for="notification-type-dropdown">Notification Method</label>
-        <select id="notification-type-dropdown">
-            <option value="email">Email</option>
-            <option value="phone">Phone</option>
-        </select>
-    </div>
-
-    <button id="save-flow-btn">Save Listener</button>
-
-    <div id="spinner"></div>
-    <div id="feedback"></div>
-
-    <script src="popup.js"></script>
 </body>
+<!-- Link to JavaScript File -->
+<script src="popup.js"></script>
 </html>

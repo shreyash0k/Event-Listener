@@ -1,65 +1,16 @@
 /* General Styles */
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 10px;
+    margin: 20px;
+    padding: 0;
     width: 400px; /* Adjust to your preferred width */
-    max-width: 600px; /* To ensure it doesn't go over Chrome's limits */
+    max-width: 600px; /* To ensure it doesn't exceed Chrome's limits */
 }
 
 h1 {
-    font-size: 18px;
+    font-size: 20px;
     text-align: center;
     margin-bottom: 20px;
-}
-
-
-textarea {
-    width: 100%; /* Ensure it occupies full width of its container */
-    box-sizing: border-box; /* Includes padding and border in width */
-    height: 60px;
-    margin-bottom: 15px;
-    font-size: 14px;
-    padding: 10px; /* Add some inner space for text */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: none; /* Prevent resizing */
-}
-#url-preview {
-    width: 100%; /* Full width within its container */
-    box-sizing: border-box; /* Include padding and borders in the total width */
-    padding: 10px; /* Inner space for text */
-    font-size: 16px; /* Increase font size for better readability */
-    background-color: #f5f5f5; /* Distinctive background for read-only */
-    border: 1px solid #ccc; /* Visible border */
-    border-radius: 4px; /* Rounded corners */
-    margin-bottom: 15px; /* Spacing between elements */
-    height: 40px; /* Increase height to make it more noticeable */
-    color: #333; /* Text color for good contrast */
-    overflow: hidden; /* Ensure no extra scrolling for the text */
-}
-
-select,
-button {
-    width: 100%;
-    margin-bottom: 15px;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #0056b3;
 }
 
 label {
@@ -68,10 +19,108 @@ label {
     display: block;
 }
 
-#action-input {
-    resize: none;
-}
-
 div {
     margin-bottom: 15px;
+}
+
+/* Input Styles */
+textarea,
+select,
+button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+textarea {
+    height: 60px;
+    resize: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Select Styles */
+select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Button Styles */
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Feedback Styles */
+#feedback {
+    display: none;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+#feedback.success {
+    color: green;
+}
+
+#feedback.error {
+    color: red;
+}
+
+/* Spinner Styles */
+#spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    margin: 0 auto;
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 3px solid #007BFF;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Success Text Styles */
+.success-text {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Manage Listeners Button */
+.manage-listeners-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.manage-listeners-btn:hover {
+    background-color: #0056b3;
 }

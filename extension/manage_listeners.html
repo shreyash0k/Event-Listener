@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Listeners</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        td {
+            background-color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #555;
+        }
+
+        .loading {
+            text-align: center;
+            color: #007bff;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manage Event Listeners</h1>
+    <div id="loading" class="loading">Loading listeners...</div>
+    <table id="listeners-table" style="display: none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Event</th>
+                <th>URL</th>
+                <th>Interval</th>
+                <th>Status</th>
+                <th>Last Triggered</th>
+                <th>Next Trigger</th>
+            </tr>
+        </thead>
+        <tbody id="listeners-body"></tbody>
+    </table>
+    <div id="no-data" class="no-data" style="display: none;">No listeners found.</div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const table = document.getElementById("listeners-table");
+            const tbody = document.getElementById("listeners-body");
+            const loading = document.getElementById("loading");
+            const noData = document.getElementById("no-data");
+
+            // Fetch listeners from the backend
+            fetch("http://localhost:5001/manage-listeners")
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = "none";
+
+                    if (data.listeners && data.listeners.length > 0) {
+                        table.style.display = "table";
+                        data.listeners.forEach(listener => {
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                <td>${listener.id}</td>
+                                <td>${listener.event}</td>
+                                <td><a href="${listener.url}" target="_blank">${listener.url}</a></td>
+                                <td>${listener.interval}</td>
+                                <td>${listener.status}</td>
+                                <td>${listener.last_triggered_at || "N/A"}</td>
+                                <td>${listener.next_trigger_at || "N/A"}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        noData.style.display = "block";
+                    }
+                })
+                .catch(error => {
+                    loading.style.display = "none";
+                    noData.style.display = "block";
+                    noData.textContent = "Failed to load listeners.";
+                    console.error("Error fetching listeners:", error);
+                });
+        });
+    </script>
+</body>
+</html>
