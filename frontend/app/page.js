@@ -1,9 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import Pricing from "@/components/pricing"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
+import { Dog } from "lucide-react"
 
 export default function Home() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -27,7 +29,8 @@ export default function Home() {
     <main className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="flex justify-between items-center p-6">
-        <div className="text-xl font-bold">
+        <div className="text-xl font-bold flex items-center gap-2">
+          <Dog className="w-6 h-6" />
           Scout Pup
         </div>
         <div className="flex items-center gap-6">
@@ -78,6 +81,8 @@ export default function Home() {
           <p className="text-muted-foreground">Video Coming Soon</p>
         </div>
       </section>
+
+      <Pricing />
 
       {/* Footer with links */}
       <div className="text-sm text-gray-500 pb-8 mt-auto text-center space-x-4">

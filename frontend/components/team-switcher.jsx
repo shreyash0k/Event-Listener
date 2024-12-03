@@ -16,9 +16,8 @@ export function TeamSwitcher() {
         <SidebarMenuButton
           size="lg"
           className="cursor-default hover:bg-transparent">
-          <div
-            className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Dog className="size-4" />
+          <div className="flex items-center justify-center ml-1">
+            <Dog className="h-6 w-6" />
           </div>
           <div className="grid flex-1 text-left text-lg leading-tight">
             <span className="truncate font-semibold">
