@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export function ListenerDetailsDialog({ isOpen, onClose, listener, onSave, isNew = false }) {
+export function ListenerDetailsDialog({ isOpen, onClose, listener, onSave }) {
   const [name, setName] = useState(listener.name)
   const [url, setUrl] = useState(listener.url)
   const [prompt, setPrompt] = useState(listener.prompt || '')
@@ -33,7 +33,7 @@ export function ListenerDetailsDialog({ isOpen, onClose, listener, onSave, isNew
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px]">
         <DialogHeader>
-          <DialogTitle>{isNew ? 'Create New Listener' : 'Edit Listener'}</DialogTitle>
+          <DialogTitle>Create New Tracker</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -44,6 +44,7 @@ export function ListenerDetailsDialog({ isOpen, onClose, listener, onSave, isNew
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Uniqlo Fleece Jacket"
             />
           </div>
           <div className="grid gap-2">
@@ -54,25 +55,27 @@ export function ListenerDetailsDialog({ isOpen, onClose, listener, onSave, isNew
               id="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://www.uniqlo.com/us/en/products/E449753-000/00"
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="prompt">
-              Prompt
+              What to check for
             </Label>
             <Textarea
               id="prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Let me know when this jacket is available in light blue and XL"
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="interval">
-              Interval
+              Check Every
             </Label>
             <Select value={interval} onValueChange={setInterval}>
               <SelectTrigger>
-                <SelectValue placeholder="Select interval" />
+                <SelectValue placeholder="Select check frequency" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1 hour">1 hour</SelectItem>
@@ -84,7 +87,7 @@ export function ListenerDetailsDialog({ isOpen, onClose, listener, onSave, isNew
         </div>
         <DialogFooter>
           <Button type="submit" onClick={handleSave}>
-            {isNew ? 'Create' : 'Save'}
+            Create
           </Button>
         </DialogFooter>
       </DialogContent>

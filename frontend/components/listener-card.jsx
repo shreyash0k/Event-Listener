@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash, Save, PencilLine, RotateCw } from 'lucide-react'
+import { Trash, Pencil, RotateCw } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -19,10 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export function ListenerCard({ listener, onDelete, onUpdate }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [editedListener, setEditedListener] = useState(listener)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleSave = () => {
     onUpdate(editedListener)
@@ -48,12 +58,17 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
     return prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt;
   };
 
+  const handleDelete = () => {
+    onDelete()
+    setShowDeleteDialog(false)
+  }
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-xl">{listener.name}</CardTitle>
-          <Badge variant="secondary" className="flex items-center gap-1">
+          <Badge variant="secondary" className="flex items-center gap-1 bg-green-500 text-white hover:bg-green-600">
             <RotateCw className="h-3 w-3" />
             {listener.interval}
           </Badge>
@@ -75,6 +90,7 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
                 id="name"
                 value={editedListener.name}
                 onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="Uniqlo Fleece Jacket"
               />
             </div>
             <div className="grid gap-2">
@@ -83,24 +99,26 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
                 id="url"
                 value={editedListener.url}
                 onChange={(e) => handleChange('url', e.target.value)}
+                placeholder="https://www.uniqlo.com/us/en/products/E449753-000/00"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="prompt">Prompt</Label>
+              <Label htmlFor="prompt">What to check for</Label>
               <Textarea
                 id="prompt"
                 value={editedListener.prompt}
                 onChange={(e) => handleChange('prompt', e.target.value)}
+                placeholder="Let me know when this jacket is available in light blue and XL"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="interval">Interval</Label>
+              <Label htmlFor="interval">Check Every</Label>
               <Select 
                 value={editedListener.interval} 
                 onValueChange={(value) => handleChange('interval', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select interval" />
+                  <SelectValue placeholder="Select check frequency" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1 hour">1 hour</SelectItem>
@@ -120,17 +138,36 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
               className="text-sm text-primary p-0 h-auto flex items-center gap-1"
               onClick={() => setIsExpanded(true)}
             >
-              <PencilLine className="h-3 w-3" />
+              <Pencil className="h-3 w-3" />
               Edit
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onDelete}
-            >
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                >
+                  <Trash className="h-4 w-4" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure?</DialogTitle>
+                  <DialogDescription>
+                    This will permanently delete this tracker.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         ) : (
           <>
@@ -150,14 +187,33 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
                 Cancel
               </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onDelete}
-            >
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                >
+                  <Trash className="h-4 w-4" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure?</DialogTitle>
+                  <DialogDescription>
+                    This will permanently delete this tracker.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </CardFooter>

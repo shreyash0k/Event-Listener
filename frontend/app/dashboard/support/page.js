@@ -31,7 +31,7 @@ export default function SupportPage() {
           <p>Cheers,</p>
           <div className="flex items-center font-bold gap-2 mt-1">
             <p>Scout Pup Team</p>
-            <Dog className="h-5 w-5 text-primary" />
+            <Dog className="h-5 w-5 text-primary text-black" />
           </div>
         </div>
       </div>

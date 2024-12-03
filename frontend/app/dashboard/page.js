@@ -89,14 +89,28 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6 w-full max-w-3xl">
-          {listeners.map((listener) => (
-            <ListenerCard
-              key={listener.id}
-              listener={listener}
-              onDelete={() => handleDelete(listener.id)}
-              onUpdate={handleUpdate}
-            />
-          ))}
+          {listeners.length > 0 ? (
+            listeners.map((listener) => (
+              <ListenerCard
+                key={listener.id}
+                listener={listener}
+                onDelete={() => handleDelete(listener.id)}
+                onUpdate={handleUpdate}
+              />
+            ))
+          ) : (
+            <div className="text-center">
+              <p className="text-lg">
+                Welcome to Scout Pup! All of your trackers will show up here. To get started, create your {" "}
+                <button 
+                  onClick={() => setIsNewListenerDialogOpen(true)}
+                  className="text-primary hover:underline font-medium text-blue-500"
+                >
+                  first tracker
+                </button>.
+              </p>
+            </div>
+          )}
         </div>
 
         <ListenerDetailsDialog

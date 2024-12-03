@@ -30,7 +30,7 @@ const data = {
   },
   navMain: [
     {
-      title: "Manage Listeners",
+      title: "Manage Trackers",
       url: "/dashboard",
       icon: PencilLine,
     },
