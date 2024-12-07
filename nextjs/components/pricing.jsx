@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { createSubscriptionCheckout } from '@/lib/checkout'
 
 const tiers = [
   {
@@ -38,6 +39,14 @@ const tiers = [
 ]
 
 export default function Pricing() {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleUpgradeClick = async () => {
+    setIsLoading(true)
+    await createSubscriptionCheckout()
+    setIsLoading(false)
+  }
+
   return (
     <section className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -61,7 +70,13 @@ export default function Pricing() {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full">{tier.cta}</Button>
+                <Button 
+                  className="w-full"
+                  onClick={tier.name === 'Pro' ? handleUpgradeClick : undefined}
+                  disabled={isLoading && tier.name === 'Pro'}
+                >
+                  {isLoading && tier.name === 'Pro' ? 'Loading...' : tier.cta}
+                </Button>
               </CardFooter>
             </Card>
           ))}
