@@ -48,7 +48,7 @@ export async function POST(req) {
       mode,
       successUrl,
       cancelUrl,
-      clientReferenceId: user.id,
+      clientReferenceId: user.id, //We set this to the user ID so we can associate authed users with their subscriptions
       user: user.email ? {
         email: user.email,
       } : undefined,

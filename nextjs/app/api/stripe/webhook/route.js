@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 import { createClient } from '@supabase/supabase-js';
 import { findCheckoutSession } from "@/libs/stripe";
+import { SUBSCRIPTION_PLANS, getPlanByPriceId } from '@/subscriptions.config'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -40,105 +41,84 @@ export async function POST(req) {
       case "checkout.session.completed": {
         console.log("checkout.session.completed");
         const session = await findCheckoutSession(data.object.id);
-
-        const customerId = session?.customer;
-        const priceId = session?.line_items?.data[0]?.price.id;
-        const userId = data.object.client_reference_id;
-        const customerEmail = session.customer_email;
         
-        /*
-        const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
-        console.log(plan);
-
-        if (!plan) break;
-        */
-
-        // Update the user record in Supabase
         const { error: userError } = await supabase
           .from('users')
           .update({
-            stripe_customer_id: customerId,
-            stripe_price_id: priceId,
-            stripe_email: customerEmail,
-            has_access: true,
+            stripe_customer_id: session.customer,
+            subscription_status: 'active',
+            check_count: 0,
+            tracker_count: 0
           })
-          .eq('user_id', userId);
-
-        if (userError) {
-          console.error('Error updating user in Supabase:', userError);
-          throw userError;
-        }
-
-        console.log('User updated successfully');
-
-        // You can add additional logic here, such as sending a confirmation email
-
-        break;
-      }
-
-      case "checkout.session.expired": {
-        // User didn't complete the transaction
-        // You don't need to do anything here, by you can send an email to the user to remind him to complete the transaction, for instance
+          .eq('id', data.object.client_reference_id);
         break;
       }
 
       case "customer.subscription.updated": {
-        // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
-        // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
-        // You can update the user data to show a "Cancel soon" badge for instance
+        const subscription = event.data.object;
+        
+        // Update directly using stripe_customer_id
+        const { error } = await supabase
+          .from('users')
+          .update({
+            subscription_status: subscription.status
+          })
+          .eq('stripe_customer_id', subscription.customer);
         break;
       }
 
       case "customer.subscription.deleted": {
-        // The customer subscription stopped
-        // ❌ Revoke access to the product
-        // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
-        const subscription = await stripe.subscriptions.retrieve(
-          data.object.id
-        );
-        const user = await User.findOne({ customerId: subscription.customer });
-
-        // Revoke access to your product
-        user.hasAccess = false;
-        await user.save();
-
+        const subscription = event.data.object;
+        
+        // Update directly using stripe_customer_id
+        const { error } = await supabase
+          .from('users')
+          .update({
+            subscription_status: 'canceled'
+          })
+          .eq('stripe_customer_id', subscription.customer);
         break;
       }
 
       case "invoice.paid": {
-        // Customer just paid an invoice (for instance, a recurring payment for a subscription)
-        // ✅ Grant access to the product
-        const priceId = data.object.lines.data[0].price.id;
-        const customerId = data.object.customer;
-
-        const user = await User.findOne({ customerId });
-
-        // Make sure the invoice is for the same plan (priceId) the user subscribed to
-        if (user.priceId !== priceId) break;
-
-        // Grant user access to your product. It's a boolean in the database, but could be a number of credits, etc...
-        user.hasAccess = true;
-        await user.save();
-
+        // This event fires when a subscription renews
+        const subscription = event.data.object;
+        
+        // Reset the usage count for this billing period
+        const { error } = await supabase
+          .from('users')
+          .update({
+            check_count: 0,  // Reset check counter
+            last_counter_reset_date: new Date().toISOString()
+          })
+          .eq('stripe_customer_id', subscription.customer);
         break;
       }
 
-      case "invoice.payment_failed":
-        // A payment failed (for instance the customer does not have a valid payment method)
-        // ❌ Revoke access to the product
-        // ⏳ OR wait for the customer to pay (more friendly):
-        //      - Stripe will automatically email the customer (Smart Retries)
-        //      - We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
-
+      case "invoice.payment_failed": {
+        const invoice = event.data.object;
+        
+        // Update subscription status to reflect payment failure
+        const { error } = await supabase
+          .from('users')
+          .update({
+            subscription_status: 'past_due'
+          })
+          .eq('stripe_customer_id', invoice.customer);
         break;
+      }
 
-      default:
-      // Unhandled event type
+      case "customer.subscription.trial_will_end": {
+        // Fires 3 days before trial ends
+        // You might want to email the user or show UI warnings
+        const subscription = event.data.object;
+        break;
+      }
     }
+
+    return NextResponse.json({});
   } catch (e) {
-    console.error("stripe error: " + e.message + " | EVENT TYPE: " + eventType);
+    console.error("stripe error:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
-
-  return NextResponse.json({});
 }

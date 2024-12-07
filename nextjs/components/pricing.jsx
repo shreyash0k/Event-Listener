@@ -10,33 +10,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { createSubscriptionCheckout } from '@/lib/checkout'
+import { SUBSCRIPTION_PLANS } from '@/subscriptions.config'
 
-const tiers = [
-  {
-    name: "Free",
-    price: "$0",
-    description: "For trying it out",
-    features: [
-      "1 tracker",
-      "30 checks per month",
-      "Email alerts",
-      "Max frequency: daily",
-    ],
-    cta: "Get started",
-  },
-  {
-    name: "Pro",
-    price: "$6.99/month",
-    description: "For power users",
-    features: [
-      "5 trackers",
-      "200 checks per month",
-      "Email alerts",
-      "Max frequency: hourly",
-    ],
-    cta: "Upgrade to Pro",
-  },
-]
+const tiers = Object.values(SUBSCRIPTION_PLANS).map(plan => ({
+  name: plan.name,
+  price: plan.name === 'Free' ? '$0' : `$${plan.price}/month`,
+  features: [
+    `${plan.limits.trackers} trackers`,
+    `${plan.limits.checksPerMonth} checks per month`,
+    // ... other features
+  ],
+  // ... other tier properties
+}))
 
 export default function Pricing() {
   const [isLoading, setIsLoading] = useState(false)
