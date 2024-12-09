@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
@@ -14,60 +14,68 @@ import {
 import { ListenerCard } from "@/components/listener-card"
 import { ListenerDetailsDialog } from "@/components/listener-dialog"
 
-const initialListeners = [
-  {
-    id: 1,
-    name: "Tesla Product Manager Job",
-    url: "www.tesla.com/careers",
-    prompt: "Check for new product manager job postings",
-    interval: "1 day"
-  },
-  {
-    id: 2,
-    name: "Uniqlo Blue Sweater",
-    url: "www.uniqlo.com/fluffy-sweater",
-    prompt: "Check if the blue sweater is back in stock",
-    interval: "1 hour"
-  },
-  {
-    id: 3,
-    name: "Flight to Vancouver",
-    url: "www.expedia.com",
-    prompt: "Check for flight deals to Vancouver",
-    interval: "1 week"
-  },
-  {
-    id: 4,
-    name: "Anthropic Claude",
-    url: "www.anthropic.com",
-    prompt: "Check for to see when anthropic launches a new claude model and notify me as soon as possible!!!",
-    interval: "1 week"
-  },
-]
-
 export default function DashboardPage() {
-  const [listeners, setListeners] = useState(initialListeners)
+  const [trackers, setTrackers] = useState([])
   const [isNewListenerDialogOpen, setIsNewListenerDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleDelete = (id) => {
-    setListeners(listeners.filter(listener => listener.id !== id))
-    // Placeholder for API call
-    console.log('Deleting listener:', id)
-  }
+  useEffect(() => {
+    const fetchTrackers = async () => {
+      try {
+        const response = await fetch('/api/trackers');
+        const { data } = await response.json();
+        setTrackers(data || []);
+      } catch (error) {
+        console.error('Error fetching trackers:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleUpdate = (updatedListener) => {
-    setListeners(listeners.map(listener => 
-      listener.id === updatedListener.id ? updatedListener : listener
-    ))
-    // Placeholder for API call
-    console.log('Updating listener:', updatedListener)
-  }
+    fetchTrackers();
+  }, []);
 
-  const handleCreate = (newListener) => {
-    const listenerWithId = { ...newListener, id: Date.now() }
-    setListeners([...listeners, listenerWithId])
-    // Placeholder for API call
-    console.log('Creating new listener:', listenerWithId)
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch('/api/trackers', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+
+      if (!response.ok) throw new Error('Failed to delete tracker');
+      
+      setTrackers(trackers.filter(tracker => tracker.id !== id));
+    } catch (error) {
+      console.error('Error deleting tracker:', error);
+    }
+  };
+
+  const handleUpdate = async (updatedTracker) => {
+    try {
+      const response = await fetch('/api/trackers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTracker)
+      });
+
+      if (!response.ok) throw new Error('Failed to update tracker');
+
+      const { data } = await response.json();
+      
+      // Update local state with the returned data
+      setTrackers(trackers.map(tracker => 
+        tracker.id === data.id ? data : tracker
+      ));
+    } catch (error) {
+      console.error('Error updating tracker:', error);
+    }
+  };
+
+  const handleCreate = (newTracker) => {
+    // Just update the local state with the data returned from the dialog
+    setTrackers([newTracker, ...trackers]);
+    setIsNewListenerDialogOpen(false);
   }
 
   return (
@@ -89,12 +97,14 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6 w-full max-w-3xl">
-          {listeners.length > 0 ? (
-            listeners.map((listener) => (
+          {isLoading ? (
+            <div>Loading...</div>
+          ) : trackers.length > 0 ? (
+            trackers.map((tracker) => (
               <ListenerCard
-                key={listener.id}
-                listener={listener}
-                onDelete={() => handleDelete(listener.id)}
+                key={tracker.id}
+                listener={tracker}
+                onDelete={() => handleDelete(tracker.id)}
                 onUpdate={handleUpdate}
               />
             ))

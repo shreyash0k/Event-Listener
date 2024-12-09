@@ -35,19 +35,9 @@ const data = {
       icon: PencilLine,
     },
     {
-      title: "History",
-      url: "/dashboard/history",
-      icon: History,
-    },
-    {
       title: "Chrome Extension",
       url: "https://chromewebstore.google.com/",
       icon: Download,
-    },
-    {
-      title: "Billing",
-      url: "/dashboard/billing",
-      icon: CreditCard,
     },
     {
       title: "Support",

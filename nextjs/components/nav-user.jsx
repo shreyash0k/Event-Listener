@@ -5,6 +5,9 @@ import {
   LogOut,
 } from "lucide-react"
 import { useLogout } from "@/hooks/use-logout"
+import { useState } from 'react'
+import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 import {
   Avatar,
@@ -32,12 +35,54 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const logout = useLogout()
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
   const handleLogout = async () => {
     try {
       await logout()
     } catch (error) {
       console.error('Logout error:', error)
+    }
+  }
+
+  const handleBillingClick = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/stripe/create-portal', {
+        method: 'POST'
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        if (data.error === 'free_plan') {
+          toast({
+            title: "Free Plan",
+            description: (
+              <div>
+                You're currently on the Free plan. 
+                <Link href="/pricing" className="ml-2 underline">
+                  Upgrade for more features!
+                </Link>
+              </div>
+            ),
+          })
+          return
+        }
+        throw new Error(data.error)
+      }
+      
+      window.location.href = data.url
+    } catch (error) {
+      console.error('Error opening billing portal:', error)
+      toast({
+        title: "Error",
+        description: "Failed to open billing portal",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -78,9 +123,12 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleBillingClick}
+                disabled={isLoading}
+              >
                 <CreditCard className="mr-2 h-4 w-4" />
-                Billing
+                {isLoading ? 'Loading...' : 'Billing'}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

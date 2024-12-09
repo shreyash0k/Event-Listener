@@ -1,3 +1,5 @@
+'use client'
+
 import { Check } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
@@ -18,9 +20,9 @@ const tiers = Object.values(SUBSCRIPTION_PLANS).map(plan => ({
   features: [
     `${plan.limits.trackers} trackers`,
     `${plan.limits.checksPerMonth} checks per month`,
-    // ... other features
   ],
-  // ... other tier properties
+  cta: plan.cta || 'Get Started',
+  url: plan.url
 }))
 
 export default function Pricing() {
@@ -33,9 +35,9 @@ export default function Pricing() {
   }
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Pricing Plans</h2>
+        <h2 className="text-3xl font-bold text-center mb-8">Choose a plan</h2>
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {tiers.map((tier) => (
             <Card key={tier.name} className="flex flex-col">
@@ -57,10 +59,10 @@ export default function Pricing() {
               <CardFooter>
                 <Button 
                   className="w-full"
-                  onClick={tier.name === 'Pro' ? handleUpgradeClick : undefined}
-                  disabled={isLoading && tier.name === 'Pro'}
+                  onClick={tier.url ? () => window.location.href = tier.url : handleUpgradeClick}
+                  disabled={isLoading && !tier.url}
                 >
-                  {isLoading && tier.name === 'Pro' ? 'Loading...' : tier.cta}
+                  {isLoading && !tier.url ? 'Loading...' : tier.cta}
                 </Button>
               </CardFooter>
             </Card>

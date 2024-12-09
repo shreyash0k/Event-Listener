@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Trash, Pencil, RotateCw } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,18 +33,11 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [editedListener, setEditedListener] = useState(listener)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSave = () => {
-    onUpdate(editedListener)
-    // Placeholder for API call
-    console.log('Updating listener:', editedListener)
-    setIsExpanded(false)
-  }
-
-  const handleCancel = () => {
-    setEditedListener(listener) // Reset to original values
-    setIsExpanded(false)
-  }
+  useEffect(() => {
+    setEditedListener(listener)
+  }, [listener])
 
   const handleChange = (field, value) => {
     setEditedListener(prev => ({
@@ -53,15 +46,29 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
     }))
   }
 
+  const handleSave = async () => {
+    setIsLoading(true)
+    await onUpdate(editedListener)
+    setIsLoading(false)
+    setIsExpanded(false)
+  }
+
+  const handleCancel = () => {
+    setEditedListener(listener)
+    setIsExpanded(false)
+  }
+
+  const handleDelete = async () => {
+    setIsLoading(true)
+    await onDelete()
+    setIsLoading(false)
+    setShowDeleteDialog(false)
+  }
+
   const truncatePrompt = (prompt) => {
     if (!prompt) return '';
     return prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt;
   };
-
-  const handleDelete = () => {
-    onDelete()
-    setShowDeleteDialog(false)
-  }
 
   return (
     <Card className="w-full">
@@ -70,7 +77,7 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
           <CardTitle className="text-xl">{listener.name}</CardTitle>
           <Badge variant="secondary" className="flex items-center gap-1 bg-green-500 text-white hover:bg-green-600">
             <RotateCw className="h-3 w-3" />
-            {listener.interval}
+            {listener.check_interval}
           </Badge>
         </div>
       </CardHeader>
@@ -114,8 +121,8 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
             <div className="grid gap-2">
               <Label htmlFor="interval">Check Every</Label>
               <Select 
-                value={editedListener.interval} 
-                onValueChange={(value) => handleChange('interval', value)}
+                value={editedListener.check_interval}
+                onValueChange={(value) => handleChange('check_interval', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select check frequency" />
@@ -176,8 +183,9 @@ export function ListenerCard({ listener, onDelete, onUpdate }) {
                 variant="default"
                 size="sm"
                 onClick={handleSave}
+                disabled={isLoading}
               >
-                Save
+                {isLoading ? 'Saving...' : 'Save'}
               </Button>
               <Button
                 variant="ghost"

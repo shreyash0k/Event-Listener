@@ -1,11 +1,10 @@
 "use client"
 
+import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
-import Pricing from "@/components/pricing"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { Dog } from "lucide-react"
 
 export default function Home() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -27,24 +26,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="flex justify-between items-center p-6">
-        <div className="text-xl font-bold flex items-center gap-2">
-          <Dog className="w-6 h-6" />
-          Scout Pup
-        </div>
-        <div className="flex items-center gap-6">
-          <Link href="/login" className="cursor-pointer">
-            Login
-          </Link>
-          <Link href="/login" className="cursor-pointer">
-            <Button>
-              Sign Up
-            </Button>
-          </Link>
-        </div>
-      </header>
-
+      <Header />
+      
       {/* Hero Section */}
       <section className="flex flex-wrap items-center justify-center gap-20 lg:gap-48 px-6 py-24">
         {/* Left side - Text content */}
@@ -85,8 +68,6 @@ export default function Home() {
           <p className="text-muted-foreground">Video Coming Soon</p>
         </div>
       </section>
-
-      <Pricing />
 
       {/* Footer with links */}
       <div className="text-sm text-gray-500 pb-8 mt-auto text-center space-x-4">

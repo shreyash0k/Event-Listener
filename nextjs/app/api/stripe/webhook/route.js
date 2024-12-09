@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import { createClient } from '@supabase/supabase-js';
-import { findCheckoutSession } from "@/libs/stripe";
-import { SUBSCRIPTION_PLANS, getPlanByPriceId } from '@/subscriptions.config'
+import { findCheckoutSession } from "@/lib/stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -14,13 +13,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// This is where we receive Stripe webhook events
-// It used to update the user data, send emails, etc...
-// By default, it'll store the user in the database
-// See more: https://shipfa.st/docs/features/payments
 export async function POST(req) {
   const body = await req.text();
-  const signature = headers().get("stripe-signature");
+  const headersList = await headers();
+  const signature = headersList.get("stripe-signature");
 
   let data;
   let eventType;
@@ -41,6 +37,8 @@ export async function POST(req) {
       case "checkout.session.completed": {
         console.log("checkout.session.completed");
         const session = await findCheckoutSession(data.object.id);
+        console.log("Session data:", session);
+        console.log("Client reference ID:", data.object.client_reference_id);
         
         const { error: userError } = await supabase
           .from('users')
@@ -50,7 +48,14 @@ export async function POST(req) {
             check_count: 0,
             tracker_count: 0
           })
-          .eq('id', data.object.client_reference_id);
+          .eq('user_id', data.object.client_reference_id);
+
+        if (userError) {
+          console.error('Supabase update error:', userError);
+          throw userError;
+        }
+
+        console.log('User updated successfully');
         break;
       }
 
