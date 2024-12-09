@@ -8,7 +8,7 @@ export async function GET(request) {
   console.log('Auth callback initiated with code:', code ? 'present' : 'absent');
 
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -24,7 +24,8 @@ export async function GET(request) {
 
       if (userError) {
         console.error('Error checking existing user:', userError);
-      } else if (!existingUser) {
+      } 
+      else if (!existingUser) {
         const { error: insertError } = await supabase
           .from('users')
           .insert({
@@ -45,6 +46,6 @@ export async function GET(request) {
     }
   }
 
-  console.log('Redirecting to:', requestUrl.origin + '/dashboard');
-  return NextResponse.redirect(requestUrl.origin + '/dashboard');
+  console.log('Redirecting to:', requestUrl.origin + '/pricing');
+  return NextResponse.redirect(requestUrl.origin + '/pricing');
 }

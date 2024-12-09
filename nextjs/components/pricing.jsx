@@ -1,5 +1,7 @@
-import { Check } from 'lucide-react'
+'use client'
 
+import { Check } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,39 +11,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { createSubscriptionCheckout } from '@/lib/checkout'
+import { SUBSCRIPTION_PLANS } from '@/subscriptions.config'
 
-const tiers = [
-  {
-    name: "Free",
-    price: "$0",
-    description: "For trying it out",
-    features: [
-      "1 tracker",
-      "30 checks per month",
-      "Email alerts",
-      "Max frequency: daily",
-    ],
-    cta: "Get started",
-  },
-  {
-    name: "Pro",
-    price: "$6.99/month",
-    description: "For power users",
-    features: [
-      "5 trackers",
-      "200 checks per month",
-      "Email alerts",
-      "Max frequency: hourly",
-    ],
-    cta: "Upgrade to Pro",
-  },
-]
+const tiers = Object.values(SUBSCRIPTION_PLANS).map(plan => ({
+  name: plan.name,
+  price: plan.name === 'Free' ? '$0' : `$${plan.price}/month`,
+  features: [
+    `${plan.limits.trackers} trackers`,
+    `${plan.limits.checksPerMonth} checks per month`,
+  ],
+  cta: plan.cta || 'Get Started',
+  url: plan.url
+}))
 
 export default function Pricing() {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleUpgradeClick = async () => {
+    setIsLoading(true)
+    await createSubscriptionCheckout()
+    setIsLoading(false)
+  }
+
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Pricing Plans</h2>
+        <h2 className="text-3xl font-bold text-center mb-8">Choose a plan</h2>
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {tiers.map((tier) => (
             <Card key={tier.name} className="flex flex-col">
@@ -61,7 +57,13 @@ export default function Pricing() {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full">{tier.cta}</Button>
+                <Button 
+                  className="w-full"
+                  onClick={tier.url ? () => window.location.href = tier.url : handleUpgradeClick}
+                  disabled={isLoading && !tier.url}
+                >
+                  {isLoading && !tier.url ? 'Loading...' : tier.cta}
+                </Button>
               </CardFooter>
             </Card>
           ))}

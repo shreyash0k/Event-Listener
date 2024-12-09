@@ -17,7 +17,7 @@ export function useLogout() {
         throw new Error('Logout failed')
       }
 
-      router.push('/login')
+      router.push('/')
     } catch (error) {
       console.error('Logout error:', error)
       throw error
